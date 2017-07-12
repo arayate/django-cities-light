@@ -20,8 +20,11 @@ And that's all !
 from rest_framework import viewsets, relations
 from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework import routers
-
-from django.conf.urls import url, include
+from rest_framework import filters
+try:
+    from django.conf.urls.defaults import url, include
+except ImportError:
+    from django.conf.urls import url, include
 
 from ..loading import get_cities_models
 
@@ -86,12 +89,29 @@ class CitiesLightListModelViewSet(viewsets.ReadOnlyModelViewSet):
 class CountryModelViewSet(CitiesLightListModelViewSet):
     serializer_class = CountrySerializer
     queryset = Country.objects.all()
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', )
+   
+
+    def get(self, request):
+        if request.query_params.get('id', None):
+            return self.retrieve(request)
+        else:
+            return super().get(request)
+
+    def post(self, request):
+    
+        data = request.data
+        data['country'] = country.code2
+            
 
 
 class RegionModelViewSet(CitiesLightListModelViewSet):
     serializer_class = RegionSerializer
     queryset = Region.objects.all()
-
+    filter_backends = (filters.SearchFilter, filters.DjangoFilterBackend, )
+    search_fields = ('name', )
+    filter_fields = ('country__code2', )
 
 class CityModelViewSet(CitiesLightListModelViewSet):
     """
@@ -99,7 +119,9 @@ class CityModelViewSet(CitiesLightListModelViewSet):
     """
     serializer_class = CitySerializer
     queryset = City.objects.all()
-
+    filter_backends = (filters.SearchFilter, filters.DjangoFilterBackend, )
+    search_fields = ('name', )
+    filter_fields = ('country__code2', 'region__geoname_code', )
     def get_queryset(self):
         """
         Allows a GET param, 'q', to be used against search_names.
@@ -121,6 +143,6 @@ router.register(r'regions', RegionModelViewSet,
                 base_name='cities-light-api-region')
 
 
-urlpatterns = [
+urlpatterns =[
     url(r'^', include(router.urls)),
 ]
