@@ -121,7 +121,7 @@ class CityModelViewSet(CitiesLightListModelViewSet):
     queryset = City.objects.all()
     filter_backends = (filters.SearchFilter, filters.DjangoFilterBackend, )
     search_fields = ('name', )
-    filter_fields = ('country__code2', 'region__geoname_code', )
+    filter_fields = ('country__code2', 'region__name', )
     def get_queryset(self):
         """
         Allows a GET param, 'q', to be used against search_names.
